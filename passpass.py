@@ -3,7 +3,7 @@ from tkinter import filedialog
 
 alphabet = ' ' + string.punctuation + string.ascii_letters + string.digits
 
-def genPassword(length, special='true'):
+def gen_password(length, special='true'):
     simple_alphabet = string.ascii_letters + string.digits
     pwd = ""
     i = 0
@@ -77,7 +77,7 @@ def open_one(one):
 def add_one(filename, password, parent):
     new_one = ctk.CTkToplevel()
     new_one.title('Add a new password')
-    new_one.geometry('250x150')
+    new_one.geometry('400x200')
     new_one.grab_set()
     pass_name_var = ctk.StringVar()
     pass_pass_var = ctk.StringVar()
@@ -85,14 +85,16 @@ def add_one(filename, password, parent):
     pass_name = ctk.CTkEntry(new_one, textvariable=pass_name_var, placeholder_text='Name', width=175, height=20)
     pass_pass = ctk.CTkEntry(new_one, textvariable=pass_pass_var, placeholder_text='Password', width=175, height=20)
     pass_description = ctk.CTkEntry(new_one, textvariable=pass_description_var, placeholder_text='Description', width=175, height=20)
-    button_add = ctk.CTkButton(new_one, border_width=2, fg_color="#000000", text_color="#ffffff", border_color="#3C3C3C", hover_color="#1E1E1E", text="Create database", font=("Monospace", 18), cursor="hand2", command=lambda: rewrite_file(filename, password, pass_name_var.get(), pass_pass_var.get(), pass_description_var.get(), parent))
+    button_add = ctk.CTkButton(new_one, border_width=2, fg_color="#000000", text_color="#ffffff", border_color="#3C3C3C", hover_color="#1E1E1E", text="Create database", font=("Monospace", 18), cursor="hand2", command=lambda: rewrite_file(filename, password, pass_name_var.get(), pass_pass_var.get(), pass_description_var.get(), parent, new_one))
+    ctk.CTkButton(new_one, text='Random', width=50, border_width=2, fg_color="#000000", text_color="#ffffff", border_color="#3C3C3C", hover_color="#1E1E1E", command=lambda: pass_pass_var.set(gen_password(random.randint(8, 16)))).place(x=300, y=20)
     pass_name.pack()
     pass_pass.pack()
     pass_description.pack()
     button_add.pack()
-def rewrite_file(filename, master, n, p, d, parent):
+def rewrite_file(filename, master, n, p, d, parent, window):
     for widget in parent.winfo_children():
         widget.destroy()
+    window.destroy()
     adding = {'name': n, 'password': p, 'description': d}
     with open(f'./{filename}.ppss', 'r') as f:
         old_text = decrypt(f.read(), master)[len(filename) + 1:-1]
