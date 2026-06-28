@@ -3,12 +3,12 @@ from tkinter import filedialog
 
 alphabet = ' ' + string.punctuation + string.ascii_letters + string.digits
 
-def gen_password(length, special='true'):
+def gen_password(length, special=True):
     simple_alphabet = string.ascii_letters + string.digits
     pwd = ""
     i = 0
     while i < length:
-        if special == 'true':
+        if special:
             pwd += random.choice(alphabet)
         else:
             pwd += random.choice(simple_alphabet)
@@ -106,7 +106,7 @@ def rewrite_file(filename, master, n, p, d, parent, window):
 def build_database(path, password, parent=None):
     filename = path.split('/')[-1].split('.')[0]
     with open(path, 'r') as f:
-        infos = decrypt(f.read()[len(filename):], password)
+        infos = decrypt(f.read(), password)[len(filename):]
         background = ctk.CTkScrollableFrame(tabs.tab(filename), width=100, height=100) if parent == None else parent
         if infos != '':
             infos = json.loads(infos)
