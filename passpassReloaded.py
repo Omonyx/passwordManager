@@ -1,10 +1,14 @@
 from PyQt6.QtWidgets import QLabel, QCheckBox, QTextEdit, QScrollArea, QToolButton, QApplication, QListWidget, QStackedWidget, QHBoxLayout, QFileDialog, QWidget, QVBoxLayout, QMainWindow, QPushButton, QLineEdit
 from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QEasingCurve, Qt
-from PyQt6.QtGui import QColor, QIntValidator
-import sys, string, json, random
+from PyQt6.QtGui import QColor, QIntValidator, QIcon
+import sys, string, json, random, os
 
 alphabet = ' éèçïäüöîûâÿ£¤°' + string.punctuation + string.ascii_letters + string.digits
 
+def resource_path(relative_path):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 def generator(personal_alphabet, length):
     pwd = ""
     i = 0
@@ -125,6 +129,7 @@ class MainWindow(QMainWindow):
     def __init__(self, title='Pass Pass', width=100, height=100):
         super().__init__()
         self.setWindowTitle(title)
+        self.setWindowIcon(QIcon(resource_path("./ppss_logo.ico")))
         self.setFixedSize(width, height)
         self.sub = None
     def sub_window(self, title='Pass Pass', width=100, height=100, infos=[]):
@@ -147,6 +152,7 @@ class DetailWindow(QMainWindow):
         super().__init__()
         title = link_to_name(path)
         self.setWindowTitle(title)
+        self.setWindowIcon(QIcon(resource_path("./ppss_logo.ico")))
         self.setFixedSize(width, height)
         self.items = items
         self.path = path
