@@ -77,6 +77,19 @@ def link_to_name(link):
 def add_new_pass():
     infos_to_add = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 30, True), 'passwordToo': AnimatedInput('Repeat...', 30, True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Add', lambda: save_add(infos_to_add['name'].text(), infos_to_add['email'].text(), infos_to_add['password'].text(), infos_to_add['passwordToo'].text(), infos_to_add['note'].toPlainText()))}
     window.sub.sub_window('Add a password', 350, 300, infos_to_add)
+def save_change(old_name, name, email, passw, passw2, note):
+    if name != '' and passw != '' and passw == passw2:
+        for i in range(len(window.sub.items)):
+            if window.sub.items[i]['name'] == old_name:
+                window.sub.items[i] = {'name': name, 'email': email, 'password': passw, 'note': note}
+                with open(window.sub.path, 'w') as f:
+                    filename = link_to_name(window.sub.path)
+                    if len(filename) < len(window.sub.master):
+                        for i in range(len(window.sub.master) - len(filename)):
+                            filename += filename[i]
+                    f.write(encrypt(filename + json.dumps(window.sub.items), window.sub.master))
+                window.sub.get_items()
+
 class MainWindow(QMainWindow):
     def __init__(self, title='Pass Pass', width=100, height=100):
         super().__init__()
@@ -145,17 +158,25 @@ class DetailWindow(QMainWindow):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(10)
-        layout.addWidget(QLabel(f'<h1>{item['name']}</h1>'))
+        text_name = QLabel(f'<h1>{item['name']}</h1>')
+        text_name.setStyleSheet("""
+            QLabel {
+                padding: 0px 0px 20px 5px;
+            }
+        """)
+        layout.addWidget(text_name)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(page)
-        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 30, True), 'repeat': AnimatedInput('Repeat...', 30, True), 'note': AnimatedTextArea('Note...', 80, 250)}
+        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 30, True), 'repeat': AnimatedInput('Repeat...', 30, True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Save', lambda: save_change(item['name'], all_inputs['name'].text(), all_inputs['email'].text(), all_inputs['password'].text(), all_inputs['repeat'].text(), all_inputs['note'].toPlainText()))}
         for key, input in all_inputs.items():
             layout.addWidget(input)
-            if key != 'repeat':
-                input.setText(item[key])
-            else:
+            if key == 'repeat':
                 input.setText(item['password'])
+            elif key == 'func':
+                pass
+            else:
+                input.setText(item[key])
         return scroll
     def sub_window(self, title='Pass Pass', width=100, height=100, infos=[]):
         self.sub = MainWindow(title, width, height)
