@@ -3,7 +3,7 @@ from PyQt6.QtCore import QPropertyAnimation, pyqtProperty, QEasingCurve, Qt
 from PyQt6.QtGui import QColor, QIntValidator, QIcon
 import sys, string, json, random, os
 
-alphabet = ' éèçïäüöîûâÿ£¤°' + string.punctuation + string.ascii_letters + string.digits
+alphabet = ' ëêéèçïìîäàâüùûöòôÿ§£¤²°' + string.punctuation + string.ascii_letters + string.digits
 
 def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
@@ -18,7 +18,7 @@ def generator(personal_alphabet, length):
     return pwd
 def generate_password(input, check_list, length):
     personal_alphabet = ''
-    all_alphabet = [string.ascii_lowercase, string.ascii_uppercase, string.digits, '!"#$%&\'*+,-./:;=?@\\^_`|~£¤°', '<>{}[]', 'éèçïäüöîûâÿ', ' ']
+    all_alphabet = [string.ascii_lowercase, string.ascii_uppercase, string.digits, '!"#$%&\'*+,-./:;=?@\\^_²`|~§£¤°', '<>{}[]', 'ëêéèçïìîäàâüùûöòôÿ', ' ']
     if length != '':
         for i, check in enumerate(check_list):
             if check:
