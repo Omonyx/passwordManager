@@ -80,10 +80,10 @@ def originalWindow():
 
     layout.addWidget(button_create)
     layout.addWidget(button_open)
-def save_add(name, email, passw, passw2, note):
+def save_add(name, username, email, passw, passw2, note):
     if name != '' and passw != '' and passw == passw2:
         items = window.sub.items.copy()
-        items.append({'name': name, 'email': email, 'password': passw, 'note': note})
+        items.append({'name': name, 'username': username, 'email': email, 'password': passw, 'note': note})
         with open(window.sub.path, 'w') as f:
             filename = link_to_name(window.sub.path)
             filename = get_real_filename(filename, len(window.sub.master))
@@ -101,13 +101,13 @@ def get_real_filename(filename, master_length):
             real_filename += filename[i]
     return real_filename
 def add_new_pass():
-    infos_to_add = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'passwordToo': AnimatedInput('Repeat...', 128, generator=False, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Add', lambda: save_add(infos_to_add['name'].text(), infos_to_add['email'].text(), infos_to_add['password'].text(), infos_to_add['passwordToo'].text(), infos_to_add['note'].toPlainText()))}
-    window.sub.sub_window('Add a password', 350, 300, infos_to_add)
-def save_change(old_name, name, email, passw, passw2, note):
+    infos_to_add = {'name': AnimatedInput('Name...'), 'username': AnimatedInput('Username...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'passwordToo': AnimatedInput('Repeat...', 128, generator=False, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Add', lambda: save_add(infos_to_add['name'].text(), infos_to_add['username'].text(), infos_to_add['email'].text(), infos_to_add['password'].text(), infos_to_add['passwordToo'].text(), infos_to_add['note'].toPlainText()))}
+    window.sub.sub_window('Add a password', 350, 350, infos_to_add)
+def save_change(old_name, name, username, email, passw, passw2, note):
     if name != '' and passw != '' and passw == passw2:
         for i in range(len(window.sub.items)):
             if window.sub.items[i]['name'] == old_name:
-                window.sub.items[i] = {'name': name, 'email': email, 'password': passw, 'note': note}
+                window.sub.items[i] = {'name': name, 'username': username, 'email': email, 'password': passw, 'note': note}
                 with open(window.sub.path, 'w') as f:
                     filename = link_to_name(window.sub.path)
                     filename = get_real_filename(filename, len(window.sub.master))
@@ -207,8 +207,8 @@ class DetailWindow(QMainWindow):
         scroll.setWidget(page)
         func_widget = QWidget()
         func_layout = QHBoxLayout(func_widget)
-        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'repeat': AnimatedInput('Repeat...', 128, generator=False, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': func_widget}
-        func_layout.addWidget(AnimatedButton('Save', lambda: save_change(item['name'], all_inputs['name'].text(), all_inputs['email'].text(), all_inputs['password'].text(), all_inputs['repeat'].text(), all_inputs['note'].toPlainText())))
+        all_inputs = {'name': AnimatedInput('Name...'), 'username': AnimatedInput('Username...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'repeat': AnimatedInput('Repeat...', 128, generator=False, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': func_widget}
+        func_layout.addWidget(AnimatedButton('Save', lambda: save_change(item['name'], all_inputs['name'].text(), all_inputs['username'].text(), all_inputs['email'].text(), all_inputs['password'].text(), all_inputs['repeat'].text(), all_inputs['note'].toPlainText())))
         func_layout.addWidget(AnimatedButton('Delete', lambda: delete_item(item['name']), "#a72121", "#e05c5c"))
         for key, input in all_inputs.items():
             layout.addWidget(input)
