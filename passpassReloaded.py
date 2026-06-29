@@ -43,7 +43,7 @@ def sub_open_ppss(path, master):
             else:
                 print('Wrong master password !')
     else:
-        print('Missing password !')
+        print('Missing master password !')
 def create_ppss(name, master):
     if name != '' and master != '':
         filename = name
@@ -205,21 +205,41 @@ class DetailWindow(QMainWindow):
             layout.addWidget(info)
         self.sub.show()
         self.hide()
-class AnimatedTextArea(QTextEdit):
+from PyQt6.QtCore import pyqtProperty, QEasingCurve, QPropertyAnimation
+from PyQt6.QtGui import QColor
+
+class AnimatedBase:
+    def init_animation(self, colora, colorb, duration=600):
+        self._color = QColor(colora)
+        self.colora = colora
+        self.colorb = colorb
+        self.anim = QPropertyAnimation(self, b"color")
+        self.anim.setDuration(duration)
+        self.anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._update_style()
+    @pyqtProperty(QColor)
+    def color(self):
+        return self._color
+    @color.setter
+    def color(self, value):
+        self._color = value
+        self._update_style()
+    def enterEvent(self, event):
+        self._animate_to(QColor(self.colorb))
+    def leaveEvent(self, event):
+        self._animate_to(QColor(self.colora))
+    def _animate_to(self, target):
+        self.anim.stop()
+        self.anim.setStartValue(self._color)
+        self.anim.setEndValue(target)
+        self.anim.start()
+class AnimatedTextArea(QTextEdit, AnimatedBase):
     def __init__(self, placeholder, height=80, limit=50, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
         self.setFixedHeight(height)
-        self._color = QColor(colora)
-        self.colora = colora
-        self.colorb = colorb
-        self._update_style()
-
         self.textChanged.connect(lambda: self.limit_text(limit))
-
-        self.anim = QPropertyAnimation(self, b"color")
-        self.anim.setDuration(300)
-        self.anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.init_animation(colora, colorb)
     def limit_text(self, limit):
         text = self.toPlainText()
         if len(text) > limit:
@@ -227,12 +247,6 @@ class AnimatedTextArea(QTextEdit):
             cursor = self.textCursor()
             cursor.movePosition(cursor.MoveOperation.End)
             self.setTextCursor(cursor)
-    def get_color(self):
-        return self._color
-    def set_color(self, value):
-        self._color = value
-        self._update_style()
-    color = pyqtProperty(QColor, get_color, set_color)
     def _update_style(self):
         self.setStyleSheet(f"""
             QTextEdit {{
@@ -243,35 +257,12 @@ class AnimatedTextArea(QTextEdit):
                 font-size: 14px;
             }}
         """)
-    def enterEvent(self, event):
-        self._animate_to(QColor(self.colorb))
-    def leaveEvent(self, event):
-        self._animate_to(QColor(self.colora))
-    def _animate_to(self, target):
-        self.anim.stop()
-        self.anim.setStartValue(self._color)
-        self.anim.setEndValue(target)
-        self.anim.start()
-class AnimatedButton(QPushButton):
+class AnimatedButton(QPushButton, AnimatedBase):
     def __init__(self, text, func, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(text, parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clicked.connect(func)
-        self._color = QColor(colora)
-        self.colora = colora
-        self.colorb = colorb
-        self._update_style()
-
-        self.anim = QPropertyAnimation(self, b"color")
-        self.anim.setDuration(600)
-        self.anim.setEasingCurve(QEasingCurve.Type.OutCubic)
-    @pyqtProperty(QColor)
-    def color(self):
-        return self._color
-    @color.setter
-    def color(self, value):
-        self._color = value
-        self._update_style()
+        self.init_animation(colora, colorb)
     def _update_style(self):
         self.setStyleSheet(f"""
             QPushButton {{
@@ -283,28 +274,12 @@ class AnimatedButton(QPushButton):
                 border: none;
             }}
         """)
-    def enterEvent(self, event):
-        self._animate_to(QColor(self.colorb))
-    def leaveEvent(self, event):
-        self._animate_to(QColor(self.colora))
-    def _animate_to(self, target_color):
-        self.anim.stop()
-        self.anim.setStartValue(self._color)
-        self.anim.setEndValue(target_color)
-        self.anim.start()
-class AnimatedInput(QLineEdit):
+class AnimatedInput(QLineEdit, AnimatedBase):
     def __init__(self, placeholder, height=30, password=False, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
-        self._color = QColor(colora)
-        self.colora = colora
-        self.colorb = colorb
         self.setFixedHeight(height)
-        self._update_style()
-
-        self.anim = QPropertyAnimation(self, b"color")
-        self.anim.setDuration(600)
-        self.anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.init_animation(colora, colorb)
 
         if password:
             self.setEchoMode(QLineEdit.EchoMode.Password)
@@ -338,12 +313,6 @@ class AnimatedInput(QLineEdit):
             btn_h = self.height() - 8
             self.eye_btn.setFixedSize(btn_w, btn_h)
             self.eye_btn.move(self.width() - btn_w - 4, 4)
-    def get_color(self):
-        return self._color
-    def set_color(self, value):
-        self._color = value
-        self._update_style()
-    color = pyqtProperty(QColor, get_color, set_color)
     def _update_style(self):
         self.setStyleSheet(f"""
             QLineEdit {{
@@ -355,15 +324,6 @@ class AnimatedInput(QLineEdit):
                 color: #000000;
             }}
         """)
-    def enterEvent(self, event):
-        self._animate_to(QColor(self.colorb))
-    def leaveEvent(self, event):
-        self._animate_to(QColor(self.colora))
-    def _animate_to(self, target_color):
-        self.anim.stop()
-        self.anim.setStartValue(self._color)
-        self.anim.setEndValue(target_color)
-        self.anim.start()
 
 app = QApplication(sys.argv)
 window = MainWindow('Pass Pass', 350, 150)
