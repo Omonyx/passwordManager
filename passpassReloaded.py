@@ -26,28 +26,29 @@ def open_ppss():
         infos_to_load = {'password': AnimatedInput('Password...', 30, True), 'func': AnimatedButton('Open', lambda: sub_open_ppss(path, infos_to_load['password'].text()))}
         window.sub_window('Open a safe', 350, 150, infos_to_load)
 def sub_open_ppss(path, master):
-    with open(path, 'r') as f:
-        name = link_to_name(path)
-        file_infos = f.read()
-        if decrypt(file_infos[:len(name)], master) == name:
-            window.sub.close()
-            if len(name) < len(master):
-                len_to_take = len(master)
+    if master != '':
+        with open(path, 'r') as f:
+            name = link_to_name(path)
+            file_infos = f.read()
+            if decrypt(file_infos[:len(name)], master) == name:
+                window.sub.close()
+                if len(name) < len(master):
+                    len_to_take = len(master)
+                else:
+                    len_to_take = len(name)
+                datas = decrypt(file_infos, master)[len_to_take:]
+                window.open_window(DetailWindow(path, master, 576, 324, json.loads(datas) if datas != '' else []))
+                window.sub.show()
+                window.hide()
             else:
-                len_to_take = len(name)
-            datas = decrypt(file_infos, master)[len_to_take:]
-            window.open_window(DetailWindow(path, master, 576, 324, json.loads(datas) if datas != '' else []))
-            window.sub.show()
-            window.hide()
-        else:
-            print('Wrong master password !')
+                print('Wrong master password !')
+    else:
+        print('Missing password !')
 def create_ppss(name, master):
     if name != '' and master != '':
         filename = name
         with open('./' + filename + '.ppss', 'w') as f:
-            if len(filename) < len(master):
-                for i in range(len(master) - len(filename)):
-                    filename += filename[i]
+            filename = get_real_filename(filename, len(master))
             f.write(encrypt(filename, master))
         window.sub.close()
         window.show()
@@ -64,9 +65,7 @@ def save_add(name, email, passw, passw2, note):
         items.append({'name': name, 'email': email, 'password': passw, 'note': note})
         with open(window.sub.path, 'w') as f:
             filename = link_to_name(window.sub.path)
-            if len(filename) < len(window.sub.master):
-                for i in range(len(window.sub.master) - len(filename)):
-                    filename += filename[i]
+            filename = get_real_filename(filename, len(window.sub.master))
             f.write(encrypt(filename + json.dumps(items), window.sub.master))
         window.sub.items = items
         window.sub.get_items()
@@ -74,6 +73,12 @@ def save_add(name, email, passw, passw2, note):
         window.sub.show()
 def link_to_name(link):
     return link.split('/')[-1].split('.')[0]
+def get_real_filename(filename, master_length):
+    real_filename = filename
+    if len(filename) < master_length:
+        for i in range(master_length - len(filename)):
+            real_filename += filename[i]
+    return real_filename
 def add_new_pass():
     infos_to_add = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 30, True), 'passwordToo': AnimatedInput('Repeat...', 30, True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Add', lambda: save_add(infos_to_add['name'].text(), infos_to_add['email'].text(), infos_to_add['password'].text(), infos_to_add['passwordToo'].text(), infos_to_add['note'].toPlainText()))}
     window.sub.sub_window('Add a password', 350, 300, infos_to_add)
@@ -84,11 +89,20 @@ def save_change(old_name, name, email, passw, passw2, note):
                 window.sub.items[i] = {'name': name, 'email': email, 'password': passw, 'note': note}
                 with open(window.sub.path, 'w') as f:
                     filename = link_to_name(window.sub.path)
-                    if len(filename) < len(window.sub.master):
-                        for i in range(len(window.sub.master) - len(filename)):
-                            filename += filename[i]
+                    filename = get_real_filename(filename, len(window.sub.master))
                     f.write(encrypt(filename + json.dumps(window.sub.items), window.sub.master))
                 window.sub.get_items()
+                break
+def delete_item(name):
+    for i in range(len(window.sub.items)):
+        if window.sub.items[i]['name'] == name:
+            del window.sub.items[i]
+            with open(window.sub.path, 'w') as f:
+                filename = link_to_name(window.sub.path)
+                filename = get_real_filename(filename, len(window.sub.master))
+                f.write(encrypt(filename + json.dumps(window.sub.items), window.sub.master))
+            window.sub.get_items()
+            break
 
 class MainWindow(QMainWindow):
     def __init__(self, title='Pass Pass', width=100, height=100):
@@ -168,7 +182,11 @@ class DetailWindow(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setWidget(page)
-        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 30, True), 'repeat': AnimatedInput('Repeat...', 30, True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Save', lambda: save_change(item['name'], all_inputs['name'].text(), all_inputs['email'].text(), all_inputs['password'].text(), all_inputs['repeat'].text(), all_inputs['note'].toPlainText()))}
+        func_widget = QWidget()
+        func_layout = QHBoxLayout(func_widget)
+        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 30, True), 'repeat': AnimatedInput('Repeat...', 30, True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': func_widget}
+        func_layout.addWidget(AnimatedButton('Save', lambda: save_change(item['name'], all_inputs['name'].text(), all_inputs['email'].text(), all_inputs['password'].text(), all_inputs['repeat'].text(), all_inputs['note'].toPlainText())))
+        func_layout.addWidget(AnimatedButton('Delete', lambda: delete_item(item['name']), "#a72121", "#e05c5c"))
         for key, input in all_inputs.items():
             layout.addWidget(input)
             if key == 'repeat':
@@ -188,11 +206,13 @@ class DetailWindow(QMainWindow):
         self.sub.show()
         self.hide()
 class AnimatedTextArea(QTextEdit):
-    def __init__(self, placeholder, height=80, limit=50, parent=None):
+    def __init__(self, placeholder, height=80, limit=50, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
         self.setFixedHeight(height)
-        self._color = QColor("#35a721")
+        self._color = QColor(colora)
+        self.colora = colora
+        self.colorb = colorb
         self._update_style()
 
         self.textChanged.connect(lambda: self.limit_text(limit))
@@ -224,20 +244,22 @@ class AnimatedTextArea(QTextEdit):
             }}
         """)
     def enterEvent(self, event):
-        self._animate_to(QColor("#60e05c"))
+        self._animate_to(QColor(self.colorb))
     def leaveEvent(self, event):
-        self._animate_to(QColor("#35a721"))
+        self._animate_to(QColor(self.colora))
     def _animate_to(self, target):
         self.anim.stop()
         self.anim.setStartValue(self._color)
         self.anim.setEndValue(target)
         self.anim.start()
 class AnimatedButton(QPushButton):
-    def __init__(self, text, func, parent=None):
+    def __init__(self, text, func, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(text, parent)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.clicked.connect(func)
-        self._color = QColor("#35a721")
+        self._color = QColor(colora)
+        self.colora = colora
+        self.colorb = colorb
         self._update_style()
 
         self.anim = QPropertyAnimation(self, b"color")
@@ -262,19 +284,21 @@ class AnimatedButton(QPushButton):
             }}
         """)
     def enterEvent(self, event):
-        self._animate_to(QColor("#60e05c"))
+        self._animate_to(QColor(self.colorb))
     def leaveEvent(self, event):
-        self._animate_to(QColor("#35a721"))
+        self._animate_to(QColor(self.colora))
     def _animate_to(self, target_color):
         self.anim.stop()
         self.anim.setStartValue(self._color)
         self.anim.setEndValue(target_color)
         self.anim.start()
 class AnimatedInput(QLineEdit):
-    def __init__(self, placeholder, height=30, password=False, parent=None):
+    def __init__(self, placeholder, height=30, password=False, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
-        self._color = QColor("#35a721")
+        self._color = QColor(colora)
+        self.colora = colora
+        self.colorb = colorb
         self.setFixedHeight(height)
         self._update_style()
 
@@ -332,9 +356,9 @@ class AnimatedInput(QLineEdit):
             }}
         """)
     def enterEvent(self, event):
-        self._animate_to(QColor("#60e05c"))
+        self._animate_to(QColor(self.colorb))
     def leaveEvent(self, event):
-        self._animate_to(QColor("#35a721"))
+        self._animate_to(QColor(self.colora))
     def _animate_to(self, target_color):
         self.anim.stop()
         self.anim.setStartValue(self._color)
