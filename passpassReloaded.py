@@ -14,7 +14,7 @@ def generator(personal_alphabet, length):
     return pwd
 def generate_password(input, check_list, length):
     personal_alphabet = ''
-    all_alphabet = [string.ascii_lowercase, string.ascii_uppercase, string.digits, '!"#$%&\'*+,-./:;=?@\^_`|~£¤°', '<>{}[]', 'éèçïäüöîûâÿ', ' ']
+    all_alphabet = [string.ascii_lowercase, string.ascii_uppercase, string.digits, '!"#$%&\'*+,-./:;=?@\\^_`|~£¤°', '<>{}[]', 'éèçïäüöîûâÿ', ' ']
     if length != '':
         for i, check in enumerate(check_list):
             if check:
@@ -40,7 +40,7 @@ def encrypt(message, key):
 def open_ppss():
     path, _ = QFileDialog.getOpenFileName(window, "Open file", "", "PassPass file save (*.ppss)")
     if path:
-        infos_to_load = {'password': AnimatedInput('Password...', 128, password=True), 'func': AnimatedButton('Open', lambda: sub_open_ppss(path, infos_to_load['password'].text()))}
+        infos_to_load = {'password': AnimatedInput('Password...', 128, generator=False, password=True), 'func': AnimatedButton('Open', lambda: sub_open_ppss(path, infos_to_load['password'].text()))}
         window.sub_window('Open a safe', 350, 150, infos_to_load)
 def sub_open_ppss(path, master):
     if master != '':
@@ -97,7 +97,7 @@ def get_real_filename(filename, master_length):
             real_filename += filename[i]
     return real_filename
 def add_new_pass():
-    infos_to_add = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'passwordToo': AnimatedInput('Repeat...', 128, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Add', lambda: save_add(infos_to_add['name'].text(), infos_to_add['email'].text(), infos_to_add['password'].text(), infos_to_add['passwordToo'].text(), infos_to_add['note'].toPlainText()))}
+    infos_to_add = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'passwordToo': AnimatedInput('Repeat...', 128, generator=False, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': AnimatedButton('Add', lambda: save_add(infos_to_add['name'].text(), infos_to_add['email'].text(), infos_to_add['password'].text(), infos_to_add['passwordToo'].text(), infos_to_add['note'].toPlainText()))}
     window.sub.sub_window('Add a password', 350, 300, infos_to_add)
 def save_change(old_name, name, email, passw, passw2, note):
     if name != '' and passw != '' and passw == passw2:
@@ -201,7 +201,7 @@ class DetailWindow(QMainWindow):
         scroll.setWidget(page)
         func_widget = QWidget()
         func_layout = QHBoxLayout(func_widget)
-        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'repeat': AnimatedInput('Repeat...', 128, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': func_widget}
+        all_inputs = {'name': AnimatedInput('Name...'), 'email': AnimatedInput('Email...'), 'password': AnimatedInput('Password...', 128, password=True), 'repeat': AnimatedInput('Repeat...', 128, generator=False, password=True), 'note': AnimatedTextArea('Note...', 80, 250), 'func': func_widget}
         func_layout.addWidget(AnimatedButton('Save', lambda: save_change(item['name'], all_inputs['name'].text(), all_inputs['email'].text(), all_inputs['password'].text(), all_inputs['repeat'].text(), all_inputs['note'].toPlainText())))
         func_layout.addWidget(AnimatedButton('Delete', lambda: delete_item(item['name']), "#a72121", "#e05c5c"))
         for key, input in all_inputs.items():
@@ -290,7 +290,7 @@ class AnimatedButton(QPushButton, AnimatedBase):
             }}
         """)
 class AnimatedInput(QLineEdit, AnimatedBase):
-    def __init__(self, placeholder, maxChar=50, height=30, password=False, onlyNumber=False, colora='#35a721', colorb='#60e05c', parent=None):
+    def __init__(self, placeholder, maxChar=50, height=30, password=False, generator=True, onlyNumber=False, colora='#35a721', colorb='#60e05c', parent=None):
         super().__init__(parent)
         self.setPlaceholderText(placeholder)
         self.setFixedHeight(height)
@@ -303,7 +303,8 @@ class AnimatedInput(QLineEdit, AnimatedBase):
         if password:
             self.setEchoMode(QLineEdit.EchoMode.Password)
             self._add_eye_pass()
-            self._add_die_pass()
+            if generator:
+                self._add_die_pass()
     def _add_die_pass(self):
         self.die_btn = QToolButton(self)
         self.die_btn.setText('⇄')
